@@ -1,0 +1,27 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/spotifyGreen</item>
+        <item name="colorPrimaryDark">@color/spotifyBlack</item>
+        <item name="colorAccent">@color/spotifyWhite</item>
+        <item name="android:windowBackground">@color/spotifyBlack</item>
+        <item name="android:textColor">@color/spotifyWhite</item>
+        <item name="android:colorButtonNormal">@color/spotifyGreen</item>
+    </style>
+
+    <style name="PlaylistLabel">
+      <item name="android:layout_gravity">center_vertical</item>
+      <item name="android:padding">@dimen/playlistLabelPadding</item>
+      <item name="android:textSize">@dimen/playlistLabelTextSize</item>
+    </style>
+
+    <style name="PlaylistButton">
+      <item name="android:layout_gravity">center_vertical</item>
+      <item name="android:padding">@dimen/playlistButtonPadding</item>
+      <item name="android:textSize">@dimen/playlistButtonTextSize</item>
+      <item name="android:text">@string/shuffle_playlist</item>
+    </style>
+
+</resources>

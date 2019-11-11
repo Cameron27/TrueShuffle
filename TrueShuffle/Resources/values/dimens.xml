@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<resources>
+  <dimen name="playlistLabelPadding">10dp</dimen>
+  <dimen name="playlistLabelTextSize">26dp</dimen>
+  <dimen name="playlistButtonPadding">5dp</dimen>
+  <dimen name="playlistButtonTextSize">16dp</dimen>
+</resources>

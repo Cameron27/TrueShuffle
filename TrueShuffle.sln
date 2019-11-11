@@ -1,0 +1,33 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29503.13
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TrueShuffle", "TrueShuffle\TrueShuffle.csproj", "{066652C0-EB07-4898-95B1-C3F709917BB1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpotifyAuth", "SpotifyAuth\SpotifyAuth.csproj", "{FC81C697-FEA2-478B-912D-3E04C7F70B7D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{066652C0-EB07-4898-95B1-C3F709917BB1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{066652C0-EB07-4898-95B1-C3F709917BB1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{066652C0-EB07-4898-95B1-C3F709917BB1}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{066652C0-EB07-4898-95B1-C3F709917BB1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{066652C0-EB07-4898-95B1-C3F709917BB1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{066652C0-EB07-4898-95B1-C3F709917BB1}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{FC81C697-FEA2-478B-912D-3E04C7F70B7D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC81C697-FEA2-478B-912D-3E04C7F70B7D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC81C697-FEA2-478B-912D-3E04C7F70B7D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC81C697-FEA2-478B-912D-3E04C7F70B7D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A9EBBA6E-218D-43F4-8EFD-84C335FC885B}
+	EndGlobalSection
+EndGlobal

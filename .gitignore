@@ -1,0 +1,6 @@
+.vs
+SpotifyAuth/bin
+SpotifyAuth/obj
+TrueShuffle/bin
+TrueShuffle/obj
+*.csproj.user
