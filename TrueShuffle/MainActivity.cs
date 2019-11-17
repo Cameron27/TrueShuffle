@@ -23,8 +23,8 @@ namespace TrueShuffle
         private const int CountPerPage = 10;
         private SpotifyWebAPI _api;
         private int _currentIndex;
+        private bool _notShuffling = true;
         private string _userId;
-        private bool notShuffling = true;
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
@@ -94,9 +94,9 @@ namespace TrueShuffle
 
         private async void OnShuffleButtonClick(SimplePlaylist playlist)
         {
-            if (!notShuffling) return;
+            if (!_notShuffling) return;
 
-            notShuffling = false;
+            _notShuffling = false;
 
             Task<Exception> task = new Task<Exception>(() =>
             {
@@ -118,20 +118,15 @@ namespace TrueShuffle
                             shuffledTracks.Skip(i * 100).Take(100).Select(track => track.Uri).ToList()))
                     .ToList();
 
-                if (addResult.Any((error) => error.HasError()))
-                {
+                if (addResult.Any(error => error.HasError()))
                     return new Exception("Failed to add all tracks to playlist");
-                }
 
                 List<ErrorResponse> removeResult = startIndices.Select(i => _api.RemovePlaylistTracks(playlist.Id,
-                    tracks.Skip(i * 100).Take(100).Select((track, trackIndex) => new DeleteTrackUri(track.Uri, trackIndex)).ToList())).ToList();
+                    tracks.Skip(i * 100).Take(100)
+                        .Select((track, trackIndex) => new DeleteTrackUri(track.Uri, trackIndex)).ToList())).ToList();
 
-                if (removeResult.Any((error) => error.HasError()))
-                {
+                if (removeResult.Any(error => error.HasError()))
                     return new Exception("Failed to remove all tracks from playlist");
-                }
-
-                notShuffling = true;
 
                 return null;
             });
@@ -140,8 +135,10 @@ namespace TrueShuffle
 
             await task.ContinueWith(errorTask =>
             {
-                string resultText = errorTask.Result == null ? "succeeded" : "failed";
+                string resultText = errorTask.Result == null ? "Task succeeded" : $"Task failed: {errorTask.Result}";
                 Log.Debug("Shuffle", $"Task has completed and {resultText}");
+
+                _notShuffling = true;
             });
         }
 
