@@ -42,13 +42,15 @@ namespace TrueShuffle
         protected override void OnActivityResult(int requestCode, Result resultCode, Intent intent)
         {
             int resultCodeInt = (int) resultCode;
-            resultCodeInt += 0;
 
             if (requestCode != RequestCode) return;
 
             AuthenticationResponse response = AuthenticationClient.GetResponse(resultCodeInt, intent);
             if (response.GetType() == AuthenticationResponse.Type.Token)
             {
+                TextView successTextView = FindViewById<TextView>(Resource.Id.success_text_view);
+                successTextView.Text = "";
+
                 Log.Debug("SpotifyAuth", $"Auth token: {response.AccessToken}");
 
                 ISharedPreferencesEditor editor = GetSharedPreferences("SPOTIFY", 0).Edit();
@@ -58,13 +60,12 @@ namespace TrueShuffle
                 Intent i = new Intent(this, typeof(MainActivity));
                 StartActivity(i);
             }
-            else if (response.GetType() == AuthenticationResponse.Type.Error)
-            {
-                Log.Debug("SpotifyAuth", $"Auth error: {response.Error}");
-            }
             else
             {
-                Log.Debug("SpotifyAuth", "Auth failed");
+                TextView successTextView = FindViewById<TextView>(Resource.Id.success_text_view);
+                successTextView.Text = "Failed to login";
+
+                Log.Debug("SpotifyAuth", $"Auth error: {response.Error}");
             }
         }
 
