@@ -1,5 +1,5 @@
 <resources>
-  <string name="app_name">True Shuffle</string>
-  <string name="shuffle_playlist">Shuffle Playlist</string>
+    <string name="app_name">True Shuffle</string>
+    <string name="shuffle_playlist">Shuffle Playlist</string>
     <string name="action_settings">Settings</string>
 </resources>

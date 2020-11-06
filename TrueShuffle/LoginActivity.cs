@@ -6,9 +6,11 @@ using Android.OS;
 using Android.Runtime;
 using Android.Support.V7.App;
 using Android.Util;
+using Android.Views;
 using Android.Widget;
 using Com.Spotify.Sdk.Android.Authentication;
 using Xamarin.Essentials;
+using AlertDialog = Android.App.AlertDialog;
 
 namespace TrueShuffle
 {

@@ -4,8 +4,6 @@ namespace TrueShuffle
 {
     public class ValueListener<T>
     {
-       
-
         private T _value;
         public EventHandler<ValueListenerEventArgs<T>> Action;
 

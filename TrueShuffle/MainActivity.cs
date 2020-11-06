@@ -15,18 +15,22 @@ using Android.Widget;
 using SpotifyAPI.Web;
 using SpotifyAPI.Web.Models;
 using Xamarin.Essentials;
+using AlertDialog = Android.App.AlertDialog;
 
 namespace TrueShuffle
 {
     [Activity(Label = "@string/app_name", Theme = "@style/AppTheme")]
     public class MainActivity : AppCompatActivity
     {
-        private const int CountPerPage = 10;
+        private const int CountPerPage = 8;
+        private readonly EventHandler[] _buttonEvents = new EventHandler[CountPerPage];
         private readonly ValueListener<State> _state = new ValueListener<State> {Value = State.Waiting};
         private readonly object _stateChangeLock = new object();
         private SpotifyWebAPI _api;
         private int _currentIndex;
         private string _lastError;
+        private List<SimplePlaylist> _playlists;
+        private const int ArtistLimit = 10;
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
@@ -37,7 +41,7 @@ namespace TrueShuffle
             string token = GetSharedPreferences("SPOTIFY", 0).GetString("token", "");
             if (token != "")
             {
-                _api = new SpotifyWebAPI { AccessToken = token, TokenType = "Bearer" };
+                _api = new SpotifyWebAPI {AccessToken = token, TokenType = "Bearer"};
             }
             else
             {
@@ -65,48 +69,103 @@ namespace TrueShuffle
         {
             _currentIndex = index;
 
-            Paging<SimplePlaylist> playlists;
-            try
+            // get playlists
+            if (_playlists == null)
             {
-                string id = _api.GetPrivateProfile().Id;
-                playlists = _api.GetUserPlaylists(id, CountPerPage, index * CountPerPage);
-            }
-            catch (Exception e)
-            {
-                TextView statusTextView = FindViewById<TextView>(Resource.Id.status_text_view);
-                statusTextView.Text = "Failed to load playlists";
-
-                return;
-            }
-
-            GridLayout parentLayout = FindViewById<GridLayout>(Resource.Id.playlist_display);
-            for (int i = 0; i < 10; i++)
-                if (i < playlists.Items.Count)
+                _playlists = new List<SimplePlaylist>();
+                try
                 {
-                    TextView text = (TextView) parentLayout.GetChildAt(i * 2);
-                    Button button = (Button) parentLayout.GetChildAt(i * 2 + 1);
+                    string id = _api.GetPrivateProfile().Id;
+                    Paging<SimplePlaylist> subPlaylists;
+                    int i = 0;
+                    do
+                    {
+                        subPlaylists = _api.GetUserPlaylists(id, CountPerPage, i++ * CountPerPage);
+                        _playlists.AddRange(subPlaylists.Items);
+                    } while (subPlaylists.HasNextPage());
+                }
+                catch (Exception)
+                {
+                    TextView statusTextView = FindViewById<TextView>(Resource.Id.status_text_view);
+                    statusTextView.Text = "Failed to load playlists";
 
-                    text.Text = playlists.Items[i].Name;
-                    int j = i;
-                    button.Click += (sender, e) => OnShuffleButtonClick(playlists.Items[j].Id);
+                    return;
+                }
+            }
+
+            // filter playlists
+            List<SimplePlaylist> displayPlaylists = _playlists
+                .Where(p =>
+                    !(p.Name.EndsWith(" Shuffle") &&
+                      _playlists.Any(p2 => p2.Name == p.Name.Substring(0, p.Name.Length - 8))) &&
+                    !(p.Name.EndsWith(" Restrict") &&
+                      _playlists.Any(p2 => p2.Name == p.Name.Substring(0, p.Name.Length - 9))))
+                .ToList();
+
+            // display playlists
+            GridLayout parentLayout = FindViewById<GridLayout>(Resource.Id.playlist_display);
+            for (int i = _currentIndex * CountPerPage; i < (_currentIndex + 1) * CountPerPage; i++)
+                if (i < displayPlaylists.Count)
+                {
+                    TextView text = (TextView) parentLayout.GetChildAt(i % CountPerPage * 2);
+                    Button button = (Button) parentLayout.GetChildAt(i % CountPerPage * 2 + 1);
+
+                    text.Text = displayPlaylists[i].Name;
+                    string id = displayPlaylists[i].Id;
+
+                    if (_buttonEvents[i % CountPerPage] != null)
+                        button.Click -= _buttonEvents[i % CountPerPage];
+
+                    void Event(object sender, EventArgs e)
+                    {
+                        OnSelectButtonClick(id);
+                    }
+
+                    button.Click += Event;
+                    _buttonEvents[i % CountPerPage] = Event;
 
                     text.Visibility = ViewStates.Visible;
                     button.Visibility = ViewStates.Visible;
                 }
                 else
                 {
-                    parentLayout.GetChildAt(i * 2).Visibility = ViewStates.Gone;
-                    parentLayout.GetChildAt(i * 2 + 1).Visibility = ViewStates.Gone;
+                    parentLayout.GetChildAt(i % CountPerPage * 2).Visibility = ViewStates.Gone;
+                    parentLayout.GetChildAt(i % CountPerPage * 2 + 1).Visibility = ViewStates.Gone;
                 }
 
+            // show or hind nav buttons
             Button nextButton = FindViewById<Button>(Resource.Id.next_button);
-            nextButton.Visibility = playlists.HasNextPage() ? ViewStates.Visible : ViewStates.Invisible;
+            nextButton.Visibility = (_currentIndex + 1) * CountPerPage < _playlists.Count
+                ? ViewStates.Visible
+                : ViewStates.Invisible;
 
             Button previousButton = FindViewById<Button>(Resource.Id.previous_button);
-            previousButton.Visibility = playlists.HasPreviousPage() ? ViewStates.Visible : ViewStates.Invisible;
+            previousButton.Visibility = _currentIndex > 0 ? ViewStates.Visible : ViewStates.Invisible;
         }
 
-        private async void OnShuffleButtonClick(string playlistId)
+        private void OnSelectButtonClick(string playlistId)
+        {
+            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this, Resource.Style.DialogTheme);
+            LayoutInflater inflater = (LayoutInflater) GetSystemService(LayoutInflaterService);
+            View popupView = inflater.Inflate(Resource.Layout.popup, null);
+
+            dialogBuilder.SetView(popupView);
+            AlertDialog dialog = dialogBuilder.Create();
+            dialog.Show();
+
+            popupView.FindViewById<Button>(Resource.Id.shuffle_button).Click += (sender, e) =>
+            {
+                dialog.Dismiss();
+                OnShuffleButtonClick(playlistId, ShuffleMode.Shuffle);
+            };
+            popupView.FindViewById<Button>(Resource.Id.restrict_button).Click += (sender, e) =>
+            {
+                dialog.Dismiss();
+                OnShuffleButtonClick(playlistId, ShuffleMode.Restrict);
+            };
+        }
+
+        private async void OnShuffleButtonClick(string playlistId, ShuffleMode shuffleMode)
         {
             if (_state.Value != State.Waiting && _state.Value != State.Failed) return;
 
@@ -118,54 +177,67 @@ namespace TrueShuffle
                 {
                     // get playlist
                     FullPlaylist playlist =
-                        _api.GetPlaylist(playlistId, fields: "id,tracks.items(track.uri),tracks.total");
+                        _api.GetPlaylist(playlistId, fields: "id,name,tracks.items(track.uri),tracks.total");
 
                     if (playlist.Tracks == null)
                         return new Exception("Failed to get playlist");
 
                     // get tracks
-                    int[] startIndices =
-                        Enumerable.Range(0, (int) Math.Ceiling(playlist.Tracks.Total / 100F)).ToArray();
-                    List<Paging<PlaylistTrack>> playlistTracks = new List<Paging<PlaylistTrack>> {playlist.Tracks};
-                    playlistTracks.AddRange(startIndices.Skip(1)
-                        .Select(i => _api.GetPlaylistTracks(playlist.Id, fields: "items(track.uri)", offset: i * 100))
-                        .ToList());
-
-                    // add tracks to single list
-                    List<FullTrack> tracks = new List<FullTrack>();
-                    playlistTracks.ToList().ForEach(playlistTracksGroup =>
-                        tracks.AddRange(playlistTracksGroup.Items.Select(playlistTrack => playlistTrack.Track)));
+                    IList<FullTrack> tracks = Enumerable.Range(0, (int) Math.Ceiling(playlist.Tracks.Total / 100F))
+                        .Select(i =>
+                            _api.GetPlaylistTracks(playlist.Id, fields: "items.track(uri,artists.name)",
+                                offset: i * 100))
+                        .SelectMany(group => group.Items.Select(playlistTrack => playlistTrack.Track))
+                        .ToList();
 
                     if (tracks.Count != playlist.Tracks.Total)
                         return new Exception("Failed to get all tracks in playlist");
 
                     // randomize track order
-                    Random rnd = new Random();
-                    List<FullTrack> shuffledTracks = tracks.OrderBy(x => rnd.NextDouble()).ToList();
+                    if (shuffleMode == ShuffleMode.Shuffle)
+                        tracks.Shuffle();
+                    else if (shuffleMode == ShuffleMode.Restrict)
+                        tracks = tracks
+                            .GroupBy(track => track.Artists[0].Name)
+                            .SelectMany(artist => artist.ToList().Shuffle().Take(ArtistLimit))
+                            .ToList()
+                            .Shuffle();
 
                     // add tracks
+                    string id = _api.GetPrivateProfile().Id;
+
+                    // delete old playlists
+                    foreach (SimplePlaylist p in _playlists.Where(p => p.Name == playlist.Name + " " + shuffleMode)
+                        .ToList())
+                    {
+                        ErrorResponse error = _api.UnfollowPlaylist(id, p.Id);
+                        if (error.HasError())
+                            return new Exception("Failed to delete old playlist");
+                        _playlists.Remove(p);
+                    }
+
+                    // create new playlist
                     _state.Value = State.AddingTracks;
-                    List<ErrorResponse> addResult = startIndices.Select(i =>
-                            _api.AddPlaylistTracks(playlist.Id,
-                                shuffledTracks.Skip(i * 100).Take(100).Select(track => track.Uri).ToList()))
+                    FullPlaylist newPlaylist = _api.CreatePlaylist(id, playlist.Name + " " + shuffleMode, false);
+                    if (newPlaylist.Id == null)
+                        return new Exception("Failed to create new playlist");
+
+
+                    _playlists.Add(new SimplePlaylist {Id = newPlaylist.Id, Name = newPlaylist.Name});
+
+                    // add tracks
+                    List<ErrorResponse> addResult = Enumerable.Range(0, (int) Math.Ceiling(tracks.Count / 100F)).Select(
+                            i =>
+                                _api.AddPlaylistTracks(newPlaylist.Id,
+                                    tracks.Skip(i * 100).Take(100).Select(track => track.Uri).ToList()))
                         .ToList();
 
                     if (addResult.Any(error => error.HasError()))
                         return new Exception("Failed to add all tracks to playlist");
 
-                    // delete tracks
-                    _state.Value = State.RemovingTracks;
-                    List<ErrorResponse> removeResult = startIndices.Select(i => _api.RemovePlaylistTracks(playlist.Id,
-                            tracks.Skip(i * 100).Take(100)
-                                .Select((track, trackIndex) => new DeleteTrackUri(track.Uri, trackIndex)).ToList()))
-                        .ToList();
-
-                    if (removeResult.Any(error => error.HasError()))
-                        return new Exception("Failed to remove all tracks from playlist");
-
                     return null;
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     return new Exception("Unknown error has occured");
                 }
@@ -258,6 +330,12 @@ namespace TrueShuffle
             AddingTracks,
             Waiting,
             Failed
+        }
+
+        private enum ShuffleMode
+        {
+            Shuffle,
+            Restrict
         }
     }
 }
