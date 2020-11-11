@@ -7,6 +7,8 @@
         <item name="android:windowBackground">@color/spotify_dark_black</item>
         <item name="android:textColor">@color/spotify_white</item>
         <item name="android:colorButtonNormal">@color/spotify_green</item>
+        <item name="android:editTextBackground">@color/spotify_dark_black</item>
+        <item name="android:editTextColor">@color/spotify_white</item>
     </style>
 
     <style name="DialogTheme" parent="Theme.AppCompat.Light.Dialog.Alert">

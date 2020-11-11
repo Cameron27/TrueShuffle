@@ -88,7 +88,7 @@ namespace TrueShuffle
                 {
                     TextView statusTextView = FindViewById<TextView>(Resource.Id.status_text_view);
                     statusTextView.Text = "Failed to load playlists";
-
+                    
                     return;
                 }
             }
@@ -156,16 +156,18 @@ namespace TrueShuffle
             popupView.FindViewById<Button>(Resource.Id.shuffle_button).Click += (sender, e) =>
             {
                 dialog.Dismiss();
-                OnShuffleButtonClick(playlistId, ShuffleMode.Shuffle);
+                OnShuffleButtonClick(playlistId, ShuffleMode.Shuffle, popupView);
             };
             popupView.FindViewById<Button>(Resource.Id.restrict_button).Click += (sender, e) =>
             {
                 dialog.Dismiss();
-                OnShuffleButtonClick(playlistId, ShuffleMode.Restrict);
+                OnShuffleButtonClick(playlistId, ShuffleMode.Restrict, popupView);
             };
+            popupView.FindViewById<EditText>(Resource.Id.restrict_value).Text =
+                GetSharedPreferences("SPOTIFY", 0).GetString("RESTRICT_VALUE", "10");
         }
 
-        private async void OnShuffleButtonClick(string playlistId, ShuffleMode shuffleMode)
+        private async void OnShuffleButtonClick(string playlistId, ShuffleMode shuffleMode, View popup)
         {
             if (_state.Value != State.Waiting && _state.Value != State.Failed) return;
 
@@ -197,11 +199,25 @@ namespace TrueShuffle
                     if (shuffleMode == ShuffleMode.Shuffle)
                         tracks.Shuffle();
                     else if (shuffleMode == ShuffleMode.Restrict)
+                    {
+                        // get value
+                        EditText value = popup.FindViewById<EditText>(Resource.Id.restrict_value);
+                        bool res = int.TryParse(value.Text, out int artistLimit);
+
+                        // check value is valid
+                        if(!res || artistLimit < 1) throw new Exception("Restrict value is not a positive integer");
+                        
+                        // save value
+                        ISharedPreferencesEditor editor = GetSharedPreferences("SPOTIFY", 0).Edit();
+                        editor.PutString("RESTRICT_VALUE", artistLimit.ToString());
+                        editor.Commit();
+                        
                         tracks = tracks
                             .GroupBy(track => track.Artists[0].Name)
-                            .SelectMany(artist => artist.ToList().Shuffle().Take(ArtistLimit))
+                            .SelectMany(artist => artist.ToList().Shuffle().Take(artistLimit))
                             .ToList()
                             .Shuffle();
+                    }
 
                     // add tracks
                     string id = _api.GetPrivateProfile().Id;
