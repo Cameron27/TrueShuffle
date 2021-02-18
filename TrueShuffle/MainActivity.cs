@@ -23,6 +23,7 @@ namespace TrueShuffle
     public class MainActivity : AppCompatActivity
     {
         private const int CountPerPage = 8;
+        private const int ArtistLimit = 10;
         private readonly EventHandler[] _buttonEvents = new EventHandler[CountPerPage];
         private readonly ValueListener<State> _state = new ValueListener<State> {Value = State.Waiting};
         private readonly object _stateChangeLock = new object();
@@ -30,7 +31,6 @@ namespace TrueShuffle
         private int _currentIndex;
         private string _lastError;
         private List<SimplePlaylist> _playlists;
-        private const int ArtistLimit = 10;
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
@@ -88,7 +88,7 @@ namespace TrueShuffle
                 {
                     TextView statusTextView = FindViewById<TextView>(Resource.Id.status_text_view);
                     statusTextView.Text = "Failed to load playlists";
-                    
+
                     return;
                 }
             }
@@ -145,6 +145,8 @@ namespace TrueShuffle
 
         private void OnSelectButtonClick(string playlistId)
         {
+            if (_state.Value != State.Waiting && _state.Value != State.Failed) return;
+
             AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this, Resource.Style.DialogTheme);
             LayoutInflater inflater = (LayoutInflater) GetSystemService(LayoutInflaterService);
             View popupView = inflater.Inflate(Resource.Layout.popup, null);
@@ -197,7 +199,9 @@ namespace TrueShuffle
 
                     // randomize track order
                     if (shuffleMode == ShuffleMode.Shuffle)
+                    {
                         tracks.Shuffle();
+                    }
                     else if (shuffleMode == ShuffleMode.Restrict)
                     {
                         // get value
@@ -205,13 +209,13 @@ namespace TrueShuffle
                         bool res = int.TryParse(value.Text, out int artistLimit);
 
                         // check value is valid
-                        if(!res || artistLimit < 1) throw new Exception("Restrict value is not a positive integer");
-                        
+                        if (!res || artistLimit < 1) throw new Exception("Restrict value is not a positive integer");
+
                         // save value
                         ISharedPreferencesEditor editor = GetSharedPreferences("SPOTIFY", 0).Edit();
                         editor.PutString("RESTRICT_VALUE", artistLimit.ToString());
                         editor.Commit();
-                        
+
                         tracks = tracks
                             .GroupBy(track => track.Artists[0].Name)
                             .SelectMany(artist => artist.ToList().Shuffle().Take(artistLimit))
