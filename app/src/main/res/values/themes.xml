@@ -1,0 +1,13 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <style name="Theme.TrueShuffle" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+        <item name="colorPrimary">@color/spotify_green</item>
+        <item name="colorPrimaryDark">@color/spotify_grey</item>
+        <item name="colorAccent">@color/spotify_white</item>
+        <item name="android:windowBackground">@color/spotify_dark_black</item>
+        <item name="android:textColor">@color/spotify_white</item>
+        <item name="android:colorButtonNormal">@color/spotify_green</item>
+        <item name="android:editTextColor">@color/spotify_white</item>
+        <item name="android:navigationBarColor">@color/spotify_grey</item>
+    </style>
+</resources>

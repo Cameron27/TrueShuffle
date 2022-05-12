@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:columnCount="2"
+    android:orientation="vertical"
+    android:paddingHorizontal="10dp"
+    android:paddingVertical="5dp"
+    android:rowCount="2">
+
+    <Button
+        android:id="@+id/shuffle_button"
+        android:layout_height="75dp"
+        android:layout_columnSpan="2"
+        android:layout_columnWeight="1"
+        android:layout_marginStart="5dp"
+        android:layout_marginEnd="5dp"
+        android:text="@string/shuffle"
+        android:textSize="30sp" />
+
+    <Button
+        android:id="@+id/restrict_button"
+        android:layout_height="75dp"
+        android:layout_columnWeight="1"
+        android:layout_marginStart="5dp"
+        android:layout_marginEnd="2.5dp"
+        android:text="@string/restrict"
+        android:textSize="30sp" />
+
+    <EditText
+        android:id="@+id/restrict_value"
+        android:layout_width="100dp"
+        android:layout_height="75dp"
+        android:layout_marginStart="5dp"
+        android:layout_marginEnd="2.5dp"
+        android:inputType="number"
+        android:padding="10dp"
+        android:text="@string/ten"
+        android:textSize="30sp"
+        android:backgroundTint="@color/spotify_green"/>
+</GridLayout>
